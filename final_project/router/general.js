@@ -62,57 +62,95 @@ function getBooks() {
   });
 }
 
-// Get book details based on ISBN
-public_users.get("/isbn/:isbn", function (req, res) {
+// Get book details based on ISBN using async-await
+public_users.get("/isbn/:isbn", async function (req, res) {
   const isbn = req.params.isbn; // リクエストパラメータからISBNを取得
-  const book = books[isbn]; // ISBNに基づいて本を検索
 
-  if (book) {
+  try {
+    const book = await getBookByISBN(isbn); // ISBNに基づいて本を取得
     res.json(book); // 本が見つかった場合、その詳細を返す
-  } else {
-    res.status(404).json({ message: "Book not found" }); // 本が見つからない場合、404エラーを返す
+  } catch (error) {
+    res.status(404).json({ message: error }); // 本が見つからない場合、404エラーを返す
   }
 });
 
-// Get book details based on author
-public_users.get("/author/:author", function (req, res) {
+// Function to simulate fetching a book by ISBN with a Promise
+function getBookByISBN(isbn) {
+  return new Promise((resolve, reject) => {
+    const book = books[isbn]; // ISBNに基づいて本を検索
+    if (book) {
+      resolve(book); // 本が見つかった場合、解決
+    } else {
+      reject("Book not found"); // 本が見つからない場合、エラーを拒否
+    }
+  });
+}
+
+// Get book details based on author using Promise
+public_users.get("/author/:author", async function (req, res) {
   const author = req.params.author; // リクエストパラメータから著者名を取得
-  const booksByAuthor = []; // 著者に基づく本のリストを格納する配列
 
-  // 'books'オブジェクトのすべてのキーを取得し、反復処理
-  for (let isbn in books) {
-    if (books[isbn].author === author) {
-      // 著者が一致するか確認
-      booksByAuthor.push(books[isbn]); // 一致する場合、配列に追加
-    }
-  }
-
-  if (booksByAuthor.length > 0) {
+  try {
+    const booksByAuthor = await getBooksByAuthor(author); // 著者に基づいて本を取得
     res.json(booksByAuthor); // 著者に基づく本が見つかった場合、そのリストを返す
-  } else {
-    res.status(404).json({ message: "Books by this author not found" }); // 見つからない場合、404エラーを返す
+  } catch (error) {
+    res.status(404).json({ message: error }); // 本が見つからない場合、404エラーを返す
   }
 });
 
-// Get all books based on title
-public_users.get("/title/:title", function (req, res) {
-  const title = req.params.title; // リクエストパラメータからタイトルを取得
-  const booksByTitle = []; // タイトルに基づく本のリストを格納する配列
+// Function to simulate fetching books by author with a Promise
+function getBooksByAuthor(author) {
+  return new Promise((resolve, reject) => {
+    const booksByAuthor = []; // 著者に基づく本のリストを格納する配列
 
-  // 'books'オブジェクトのすべてのキーを取得し、反復処理
-  for (let isbn in books) {
-    if (books[isbn].title === title) {
-      // タイトルが一致するか確認
-      booksByTitle.push(books[isbn]); // 一致する場合、配列に追加
+    // 'books'オブジェクトのすべてのキーを取得し、反復処理
+    for (let isbn in books) {
+      if (books[isbn].author === author) {
+        // 著者が一致するか確認
+        booksByAuthor.push(books[isbn]); // 一致する場合、配列に追加
+      }
     }
-  }
 
-  if (booksByTitle.length > 0) {
+    if (booksByAuthor.length > 0) {
+      resolve(booksByAuthor); // 著者に基づく本が見つかった場合、解決
+    } else {
+      reject("Books by this author not found"); // 見つからない場合、エラーを拒否
+    }
+  });
+}
+
+// Get all books based on title using Promise
+public_users.get("/title/:title", async function (req, res) {
+  const title = req.params.title; // リクエストパラメータからタイトルを取得
+
+  try {
+    const booksByTitle = await getBooksByTitle(title); // タイトルに基づいて本を取得
     res.json(booksByTitle); // タイトルに基づく本が見つかった場合、そのリストを返す
-  } else {
-    res.status(404).json({ message: "Books with this title not found" }); // 見つからない場合、404エラーを返す
+  } catch (error) {
+    res.status(404).json({ message: error }); // 本が見つからない場合、404エラーを返す
   }
 });
+
+// Function to simulate fetching books by title with a Promise
+function getBooksByTitle(title) {
+  return new Promise((resolve, reject) => {
+    const booksByTitle = []; // タイトルに基づく本のリストを格納する配列
+
+    // 'books'オブジェクトのすべてのキーを取得し、反復処理
+    for (let isbn in books) {
+      if (books[isbn].title === title) {
+        // タイトルが一致するか確認
+        booksByTitle.push(books[isbn]); // 一致する場合、配列に追加
+      }
+    }
+
+    if (booksByTitle.length > 0) {
+      resolve(booksByTitle); // タイトルに基づく本が見つかった場合、解決
+    } else {
+      reject("Books with this title not found"); // 見つからない場合、エラーを拒否
+    }
+  });
+}
 
 //  Get book review
 public_users.get("/review/:isbn", function (req, res) {
